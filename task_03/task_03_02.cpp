@@ -128,10 +128,10 @@ public:
                     int i = 0;
                     
                     if (tail < head)
-                        pointer = tail;
+                        pointer = tail + 1;
                     else
                         pointer = start;
-                    while (pointer < head || pointer == start && i < length * SIZE_ITERATION && \
+                    while (pointer <= head || pointer == start && i < length * SIZE_ITERATION && \
                     pointer < start + length) {
                         t[i++] = *(pointer++);
                     }
@@ -150,9 +150,13 @@ public:
                     head = t + i - 1;
                     delete[] start;
                     start = t;
-                    tail--;
-                    *tail = value;
                     length *= SIZE_ITERATION;                   
+                    if (tail - 1 < start)
+                        tail = start + length - 1;
+                    else
+                        tail--;
+
+                    *tail = value;
                 }
             }
             else {

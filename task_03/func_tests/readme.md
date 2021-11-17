@@ -41,4 +41,4 @@ a = 4 - pop back
 - 11 - push_back, pop_back, push_back, pop_back
 - 12 - push_back, pop_back, pop_back
 - 13 - pop_front, push_front, pop_front, pop_front
--
+- 14 - 3, 1, 3, 3, 1, 1, 1
