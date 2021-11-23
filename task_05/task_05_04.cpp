@@ -22,9 +22,8 @@ struct DefaultComparator {
   bool operator()(const Type& l, const Type& r) { return l < r; }
 };
 
-template <class T, class Comparator = DefaultComparator<T>>
-void merge(T array[], size_t left, size_t middle, size_t right) {
-  Comparator comp;
+template <class T, class Comparator=DefaultComparator<T>>
+void merge(T array[], size_t left, size_t middle, size_t right, Comparator comp) {
   size_t leftSubArray = middle - left + 1;
   size_t rigthSubArray = right - middle;
 
@@ -65,14 +64,14 @@ void merge(T array[], size_t left, size_t middle, size_t right) {
   }
 }
 
-template <class T, class Comparator = DefaultComparator<T>>
-void mergeSort(T array[], size_t start, size_t end) {
+template <class T, class Comparator=DefaultComparator<T>>
+void mergeSort(T array[], size_t start, size_t end, Comparator comp) {
   if (start >= end) return;
 
   size_t middle = start + (end - start) / 2;
-  mergeSort<T, Comparator>(array, start, middle);
-  mergeSort<T, Comparator>(array, middle + 1, end);
-  merge<T, Comparator>(array, start, middle, end);
+  mergeSort<T, Comparator>(array, start, middle, comp);
+  mergeSort<T, Comparator>(array, middle + 1, end, comp);
+  merge<T, Comparator>(array, start, middle, end, comp);
 }
 
 int main() {
@@ -91,7 +90,8 @@ int main() {
     dots[i * 2 + 1].value = value;
     dots[i * 2 + 1].diff = -1;
   }
-  mergeSort<dot_t, DotComparator>(dots, 0, dotsAmount - 1);
+  DotComparator comparator;
+  mergeSort<dot_t, DotComparator>(dots, 0, dotsAmount - 1, comparator);
 
   int length = 0;
   int thickness = 0;

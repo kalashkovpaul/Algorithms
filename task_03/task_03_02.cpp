@@ -29,6 +29,7 @@ class Deque {
     head = start;
     tail = head;
     isEmpty = true;
+    isBackExpand = true;
   }
 
   ~Deque() {
@@ -49,35 +50,9 @@ class Deque {
           head = start;
           *head = value;
         } else {
-          int *t = new int[length * SIZE_ITERATION];
-          int *pointer;
-          int i = 0;
-
-          if (tail < head)
-            pointer = tail;
-          else
-            pointer = start;
-          while (pointer < head && i < length * SIZE_ITERATION &&
-                 pointer < start + length) {
-            t[i++] = *(pointer++);
-          }
-
-          if (tail >= head) {
-            int j = length * SIZE_ITERATION - 1;
-            pointer = start + length - 1;
-            while (pointer >= tail && j > 0 && pointer >= start) {
-              t[j--] = *(pointer--);
-            }
-            tail = t + j + 1;
-          } else {
-            tail = t;
-          }
-          head = t + i - 1;
-          delete[] start;
-          start = t;
-          head++;
+          isBackExpand = false;
+          expand();
           *head = value;
-          length *= SIZE_ITERATION;
         }
       } else {
         *head = value;
@@ -114,40 +89,8 @@ class Deque {
           tail = start + length - 1;
           *tail = value;
         } else {
-          int *t = new int[length * SIZE_ITERATION];
-          int *pointer;
-          int i = 0;
-
-          if (tail < head)
-            pointer = tail + 1;
-          else
-            pointer = start;
-          while (pointer <= head || pointer == start &&
-                                        i < length * SIZE_ITERATION &&
-                                        pointer < start + length) {
-            t[i++] = *(pointer++);
-          }
-
-          if (tail >= head) {
-            int j = length * SIZE_ITERATION - 1;
-            pointer = start + length - 1;
-            while (pointer >= tail && pointer != head && j > 0 &&
-                   pointer >= start) {
-              t[j--] = *(pointer--);
-            }
-            tail = t + j + 1;
-          } else {
-            tail = t;
-          }
-          head = t + i - 1;
-          delete[] start;
-          start = t;
-          length *= SIZE_ITERATION;
-          if (tail - 1 < start)
-            tail = start + length - 1;
-          else
-            tail--;
-
+          isBackExpand = true;
+          expand();
           *tail = value;
         }
       } else {
@@ -180,6 +123,44 @@ class Deque {
   int *start;
   int length;
   bool isEmpty;
+  bool isBackExpand;
+
+  void expand() {
+    int *t = new int[length * SIZE_ITERATION];
+    int *pointer;
+    int i = 0;
+    if (tail < head)
+      pointer = tail + isBackExpand;
+    else
+      pointer = start;
+    while (i < length * SIZE_ITERATION && pointer < start + length &&
+           ((isBackExpand && (pointer <= head || pointer == start) ||
+             (!isBackExpand && (pointer < head)))))
+      t[i++] = *(pointer++);
+    if (tail >= head) {
+      int j = length * SIZE_ITERATION - 1;
+      pointer = start + length - 1;
+      while (pointer >= tail && j > 0 && pointer >= start &&
+             ((isBackExpand && pointer != head) || !isBackExpand)) {
+        t[j--] = *(pointer--);
+      }
+      tail = t + j + 1;
+    } else {
+      tail = t;
+    }
+    head = t + i - 1;
+    delete[] start;
+    start = t;
+    length *= SIZE_ITERATION;
+    if (isBackExpand) {
+      if (tail - 1 < start)
+        tail = start + length - 1;
+      else
+        tail--;
+    } else {
+      head++;
+    }
+  }
 };
 
 int main() {

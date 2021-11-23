@@ -75,80 +75,10 @@ class Heap {
     length *= sizeIteration;
   }
 
-  template <class SortComparator = DefaultComparator<T>>
-  int Partition(int start, int end, SortComparator comp = SortComparator()) {
-    int pivot = end;
-    int j = start;
-    for (int i = start; i < end; ++i) {
-      if (comp(data[i], data[pivot])) {
-        std::swap(data[i], data[j]);
-        ++j;
-      }
-    }
-    std::swap(data[j], data[pivot]);
-    return j;
-  }
-
-  template <class SortComparator = Comparator>
-  void quickSort(int start, int end, SortComparator comp = SortComparator()) {
-    if (start < end) {
-      int p = Partition(start, end, comp);
-      quickSort(start, p - 1);
-      quickSort(p + 1, end);
-    }
-  }
-
-  int get(T index) {
-    int element = 0;
-    if (index >= 0 && index < capacity) {
-      element = data[index];
-    } else {
-      element = wrongIndex;
-    }
-    return element;
-  }
-
-  void set(int index, T element) {
-    if (index >= 0 && index < capacity) {
-      data[index] = element;
-    }
-  }
-
   void append(T element) {
     if (capacity >= length) expand();
     data[capacity] = element;
     capacity++;
-  }
-
-  void insert(int index, T element) {
-    if (index >= 0 && index <= capacity) {
-      if (index == capacity)
-        append(element);
-      else {
-        append(data[capacity - 1]);
-        for (int i = capacity - 1; i > index; i--) {
-          data[i] = data[i - 1];
-        }
-        data[index] = element;
-      }
-    }
-  }
-
-  int index(T element) {
-    int index = 0;
-    if (capacity == 0)
-      index = notFound;
-    else {
-      while (index < capacity && data[index] != element) index++;
-      if (index == capacity) index = notFound;
-    }
-    return index;
-  }
-
-  template <class SortComparator = DefaultComparator<T>>
-  void sort(int l, int r, SortComparator comp = SortComparator()) {
-    if (l < 0 || r < 0 || l > r || l >= length || r >= length) return;
-    quickSort(l, r, comp);
   }
 
   void remove(int index) {
@@ -164,12 +94,12 @@ class Heap {
     }
   }
 
-  void print() {
-    if (capacity == 0) {
-      std::cout << "Empty\n";
-    }
-    for (int i = 0; i < capacity; i++) std::cout << data[i] << " ";
-    std::cout << std::endl;
+  void clear() {
+    T *newData = new T[initSize];
+    delete[] data;
+    data = newData;
+    capacity = 0;
+    length = 0;
   }
 
  public:
@@ -223,16 +153,6 @@ class Heap {
     capacity = 0;
     length = 0;
   }
-
-  void clear() {
-    T *newData = new T[initSize];
-    delete[] data;
-    data = newData;
-    capacity = 0;
-    length = 0;
-  }
-
-  int count() { return capacity; }
 };
 
 int main() {
@@ -277,14 +197,5 @@ int main() {
   }
   delete[] arrays;
   delete totalArray;
-
-  // totalLength = totalArray.count();
-  // int *array = new int[totalLength];
-  // for (int i = 0; i < totalLength; i++)
-  //     array[i] = totalArray.pop();
-  // for (int i = 0; i < totalLength; i++)
-  //     std::cout << array[i] << " ";
-  // std::cout << "\n";
-  // delete[] array;
   return 0;
 }
