@@ -19,21 +19,21 @@ struct DefaultComparator {
 template <class T, class SortComparator = DefaultComparator<T>>
 size_t partition(T *data, size_t start, size_t end, SortComparator comp) {
   int pivot = start + rand() % (end - start);
-  std::swap(data[pivot], data[end - 1]);
-  size_t i = start;
-  while (i < end - 1 && comp(data[i], data[end - 1])) i++;
+  std::swap(data[pivot], data[start]);
+  size_t i = end - 1;
+  while (i > start && !comp(data[i], data[start])) i--;
   size_t j = i;
-  while (j < end - 1 && comp(data[end - 1], data[j])) j++;
-  while (j != end - 1) {
-    if (!comp(data[j], data[end - 1]))
-      j++;
+  while (j > start && comp(data[start], data[j])) j--;
+  while (j != start) {
+    if (comp(data[j], data[start]))
+      j--;
     else {
       std::swap(data[i], data[j]);
-      i++;
-      j++;
+      i--;
+      j--;
     }
   }
-  std::swap(data[end - 1], data[i]);
+  std::swap(data[start], data[i]);
   return i;
 }
 
