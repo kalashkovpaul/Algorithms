@@ -15,7 +15,8 @@ g(k, i)=g(k, i-1) + i (mod m). m - степень двойки.
 #include <iostream>
 #include <vector>
 
-size_t strHash(const std::string &data) {
+size_t strHash(const std::string& data)
+{
     size_t hash = 0;
     size_t simple = 19;
     for (char i : data)
@@ -25,14 +26,16 @@ size_t strHash(const std::string &data) {
 
 template <class T>
 struct Hasher {
-    size_t operator() (const T& key) const {
+    size_t operator()(const T& key) const
+    {
         return key;
     }
 };
 
 template <>
 struct Hasher<std::string> {
-    size_t operator() (const std::string& key) const {
+    size_t operator()(const std::string& key) const
+    {
         return strHash(key);
     }
 };
@@ -43,22 +46,25 @@ struct ExampleStruct {
 
 template <>
 struct Hasher<ExampleStruct> {
-    size_t operator() (const ExampleStruct& key) const {
+    size_t operator()(const ExampleStruct& key) const
+    {
         return strHash(key.str);
     }
 };
 
 template <class T>
 struct DefaultEqual {
-    bool operator() (const T& l, const T& r) const {
+    bool operator()(const T& l, const T& r) const
+    {
         return l == r;
     }
 };
 
-template <class Key, class Equal=DefaultEqual<Key>, class Hash=Hasher<Key>>
-class HashSet  {
+template <class Key, class Equal = DefaultEqual<Key>, class Hash = Hasher<Key>>
+class HashSet {
 public:
-    HashSet() {
+    HashSet()
+    {
         HashElement newElement = HashElement();
         std::vector<HashElement> tmp(initialSize, newElement);
         buckets = tmp;
@@ -67,8 +73,8 @@ public:
         itemsCount = 0;
     }
 
-    HashSet(const HashSet &) = delete;
-    HashSet& operator= (const HashSet&) = delete;
+    HashSet(const HashSet&) = delete;
+    HashSet& operator=(const HashSet&) = delete;
 
     ~HashSet() = default;
 
@@ -81,8 +87,10 @@ public:
             grow();
         int i = 0;
         size_t bucketIdx = 0;
+        size_t curHash = hash(key);
         do {
-            bucketIdx = squareProbeHash(key, i++) % buckets.size();
+            bucketIdx = (curHash + i * (i + 1) / 2) % buckets.size();
+            i++;
         } while (buckets[bucketIdx].condition == busy && i < buckets.size());
         buckets[bucketIdx].key = key;
         buckets[bucketIdx].condition = busy;
@@ -90,33 +98,39 @@ public:
         return true;
     }
 
-    bool has(const Key& key) {
+    bool has(const Key& key)
+    {
         size_t i = 0;
-        size_t bucketIdx = squareProbeHash(key, i++) % buckets.size();
+        size_t curHash = hash(key);
+        size_t bucketIdx = curHash % buckets.size();
         do {
             if (buckets[bucketIdx].condition == busy && equal(buckets[bucketIdx].key, key))
                 return true;
             else if (buckets[bucketIdx].condition == free)
                 return false;
             else {
-                bucketIdx = squareProbeHash(key, i++) % buckets.size();
+                bucketIdx = (curHash + i * (i + 1) / 2) % buckets.size();
             }
-        }
-        while (i < buckets.size());
+            i++;
+        } while (i < buckets.size());
         return false;
     }
 
-    bool del(const Key& key) {
+    bool del(const Key& key)
+    {
+        if (!has(key))
+            return false;
         size_t i = 0;
-        size_t bucketIdx = squareProbeHash(key, i) % buckets.size();
-        while (i++ < buckets.size()) {
+        size_t curHash = hash(key);
+        size_t bucketIdx = curHash % buckets.size();
+        while (i < buckets.size()) {
             if (buckets[bucketIdx].condition == busy && equal(buckets[bucketIdx].key, key)) {
                 buckets[bucketIdx].condition = deleted;
                 itemsCount--;
                 return true;
-            }
-            else {
-                bucketIdx = squareProbeHash(key, i) % buckets.size();
+            } else {
+                bucketIdx = (curHash + i * (i + 1) / 2) % buckets.size();
+                i++;
             }
         }
         return false;
@@ -134,8 +148,16 @@ private:
         Key key;
         int condition;
 
-        HashElement(): key(), condition(free) { }
-        HashElement(Key& key): key(key), condition(free) { }
+        HashElement()
+            : key()
+            , condition(free)
+        {
+        }
+        HashElement(Key& key)
+            : key(key)
+            , condition(free)
+        {
+        }
     };
 
     std::vector<HashElement> buckets;
@@ -143,18 +165,25 @@ private:
     Equal equal;
     size_t itemsCount;
 
-    size_t squareProbeHash(const Key& key, size_t i) {
+    size_t squareProbeHash(const Key& key, size_t i)
+    {
         return (hash(key) + i * (i + 1) / 2);
     }
 
-    void grow() {
+    void grow()
+    {
         std::vector<HashElement> newBuckets(buckets.size() * sizeIteration);
         size_t newIndex = 0;
         size_t oldIndex = 0;
         for (size_t i = 0; i < buckets.size(); i++) {
-            oldIndex = squareProbeHash(buckets[i].key, 0) % buckets.size();
-            newIndex = squareProbeHash(buckets[i].key, 0)% (buckets.size() * sizeIteration); 
+            oldIndex = i;
             if (buckets[oldIndex].condition == busy) {
+                int j = 0;
+                size_t curHash = hash(buckets[oldIndex].key);
+                do {
+                    newIndex = (curHash + j * (j + 1) / 2) % (buckets.size() * sizeIteration);
+                    j++;
+                } while (newBuckets[newIndex].condition == busy && j < (buckets.size() * sizeIteration));
                 newBuckets[newIndex] = buckets[oldIndex];
                 buckets[oldIndex].condition = deleted;
             }
@@ -163,24 +192,25 @@ private:
     }
 };
 
-int main() {
+int main()
+{
     HashSet<std::string> set;
     std::string key;
     char operation = 0;
     while (std::cin >> operation >> key) {
         bool result = false;
         switch (operation) {
-            case '+':
-                result = set.add(key);
-                break;
-            case '?':
-                result = set.has(key);
-                break;
-            case '-':
-                result = set.del(key);
-                break;
-            default:
-                break;
+        case '+':
+            result = set.add(key);
+            break;
+        case '?':
+            result = set.has(key);
+            break;
+        case '-':
+            result = set.del(key);
+            break;
+        default:
+            break;
         }
         if (result) {
             std::cout << "OK" << std::endl;
@@ -190,4 +220,3 @@ int main() {
     }
     return 0;
 }
-
