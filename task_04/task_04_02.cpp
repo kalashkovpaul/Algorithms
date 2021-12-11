@@ -38,6 +38,11 @@ class AVLTree {
 
         avlNode(const Key& key): left(nullptr), right(nullptr), key(key), height(1) {
         }
+        ~avlNode()
+        {
+            delete left;
+            delete right;
+        }
     };
 public:
     AVLTree(Comparator comp = Comparator()): root(nullptr), comp(comp) {
@@ -45,15 +50,14 @@ public:
     
     ~AVLTree()
     {
-        delete left;
-        delete right;
+        delete root;
     }
 
     void insert(const Key& newKey) {
-        root = insertInternal(key, root);
+        root = insertInternal(newKey, root);
     }
 
-    void erase(conse Key& key) {
+    void erase(const Key& key) {
 
     }
 
@@ -93,9 +97,41 @@ private:
         return heigh(node->right) - height(node->left);
     }
 
+    avlNode *rotateLeft(avlNode *node)
+    {    
+        avlNode *rotated = node->right;
+        node->right = rotated->left;
+        rotated->left = node;
+        fixHeight(node);
+        fixHeight(rotated);
+        return rotated;
+    }
+
+    avlNode *rotateRight(avlNode *node)
+    {
+        avlNode *rotated = node->left;
+        node->left = rotated->right;
+        rotated->right = node;
+        fixHeight(node);
+        fixHeight(rotated);
+        return rotated;
+    }
+
     avlNode *balance(avlNode *node)
     {
-
+        fixHeight(node);
+        uint8_t bf = bfactor(node);
+        if (bf == 2) {
+            if (bfactor(node->right) < 0)
+                node->right = rotateRight(node->right);
+            return rotateLeft(node);
+        }
+        else if (bf == -2) {
+            if (bfactor(node->left) > 0)
+                node->left = rotateLeft(node->left);
+            return rotateRight(node);
+        }
+        return node;
     }
 };
 
