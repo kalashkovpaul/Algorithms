@@ -1,124 +1,146 @@
-// Даны два массива неповторяющихся целых чисел, упорядоченные по возрастанию. \
-A[0..n-1] и B[0..m-1]. n » m. Найдите их пересечение.\
-Требуемое время работы: O(m * log k), где k - позиция элемента B[m-1] в массиве A.. \
-В процессе поиска очередного элемента B[i] в массиве A пользуйтесь результатом \
-поиска элемента B[i-1]. n, k ≤ 10000.
+/*
+Дано число N < 10^6 и последовательность целых чисел из [-231..231] длиной N.
+Требуется построить бинарное дерево, заданное наивным порядком вставки.
+Т.е., при добавлении очередного числа K в дерево с корнем root, если root→Key ≤ K, то узел 
+K добавляется в правое поддерево root; иначе в левое поддерево root.
+Требования: Рекурсия запрещена. Решение должно поддерживать передачу функции сравнения
+снаружи.
+*/
 
 #include <iostream>
-#define OK 0
-#define NOT_FOUND -1
+#include <vector>
+#include <queue>
+#include <stack>
 
-typedef struct {
-  int length;
-  int *array;
-} array_t;
-
-void scanArray(array_t *array) {
-  int *data = new int[array->length];
-  for (int i = 0; i < array->length; i++) {
-    std::cin >> data[i];
-  }
-  array->array = data;
-}
-
-void printArray(array_t *array) {
-  for (int i = 0; i < array->length; i++) std::cout << array->array[i] << ' ';
-}
-
-void freeArray(array_t *array) {
-  delete[] array->array;
-  array->array = nullptr;
-  array->length = 0;
-}
-
-void findLimitsForBinary(array_t *array, int element, int *low, int *high) {
-  int i = 1;
-  *low = 0;
-  while (i - 1 < array->length && array->array[i - 1] <= element) {
-    i *= 2;
-  }
-  if (i - 1 < array->length) {
-    *high = i - 1;
-    *low = i / 2 - 1;
-  } else {
-    *low = i / 2 - 1;
-    *high = array->length - 1;
-  }
-}
-
-int binarySearch(array_t *array, int left, int right, int element) {
-  if (right >= left) {
-    int middle = left + (right - left) / 2;
-    if (array->array[middle] == element) return middle;
-    if (array->array[middle] > element)
-      return binarySearch(array, left, middle - 1, element);
-    return binarySearch(array, middle + 1, right, element);
-  }
-  return NOT_FOUND;
-}
-
-void findIntersection(array_t *firstArray, array_t *secondArray,
-                      array_t *resultArray) {
-  int leftBinary = 0, rightBinary = 0;
-  int index = 0;
-  resultArray->length = 0;
-  findLimitsForBinary(firstArray, secondArray->array[0], &leftBinary,
-                      &rightBinary);
-  index =
-      binarySearch(firstArray, leftBinary, rightBinary, secondArray->array[0]);
-  if (index != NOT_FOUND) {
-    resultArray->array[0] = firstArray->array[index];
-    resultArray->length += 1;
-    leftBinary = index;
-  }
-  int i = 1;
-  while (firstArray->array[firstArray->length - 1] >= secondArray->array[i] &&
-         i < secondArray->length) {
-    int high = leftBinary + 1;
-    while (high - 1 < firstArray->length &&
-           firstArray->array[high - 1] <= secondArray->array[i])
-      high *= 2;
-    if (high - 1 < firstArray->length) {
-      rightBinary = high - 1;
-      leftBinary = high / 2 - 1;
-    } else {
-      leftBinary = high / 2 - 1;
-      rightBinary = firstArray->length - 1;
+template <class T>
+struct DefaultComparator {
+    int operator() (const T& l, const T& r) {
+        if (l < r)
+            return -1;
+        else if (l > r)
+            return 1;
+        else
+            return 0;
     }
-    index = binarySearch(firstArray, leftBinary, rightBinary,
-                         secondArray->array[i]);
-    if (index != NOT_FOUND) {
-      resultArray->array[resultArray->length] = firstArray->array[index];
-      resultArray->length += 1;
-      leftBinary = index;
+};
+
+template <class Key, class Comparator=DefaultComparator<Key>>
+class BST {
+    struct bstNode {
+        bstNode *left;
+        bstNode *right;
+        Key key;
+        
+        bstNode(const Key& key): left(nullptr), right(nullptr), key(key) {
+        }
+    };
+public:
+    BST(Comparator comp = Comparator()): root(nullptr), comp(comp) {
     }
-    i++;
-  }
-}
+    
+    ~BST() {
+        while (!queue.empty())
+            queue.pop();
+        if (root != nullptr)
+        {
+            queue.push(root);
+            bstNode *deleted = nullptr;
+            while (!queue.empty())
+            {
+                deleted = queue.front();
+                queue.pop();
+                if (deleted)
+                {
+                    queue.push(deleted->left);
+                    queue.push(deleted->right);
+                    delete deleted;
+                }
+            }
+        }
+    }
 
-int main() {
-  int n = 0, m = 0;
-  std::cin >> n >> m;
+    void insert(Key newKey) {
+        bstNode *newNode = new bstNode(newKey);
+        while (!queue.empty())
+            queue.pop();
+        if (root != nullptr)
+        {
+            queue.push(root);
+            bstNode *fatherToNew = nullptr;
+            while (!queue.empty())
+            {
+                fatherToNew = queue.front();
+                queue.pop();
+                if (comp(newKey, fatherToNew->key) >= 0)
+                {
+                    if (fatherToNew->right != nullptr)
+                        queue.push(fatherToNew->right);
+                    else
+                        break;
+                }
+                else if (comp(newKey, fatherToNew->key) < 0)
+                {
+                    if (fatherToNew->left != nullptr)
+                        queue.push(fatherToNew->left);
+                    else
+                        break;
+                }
+            }
+            if (comp(newKey, fatherToNew->key) >= 0)
+                fatherToNew->right = newNode;
+            else
+                fatherToNew->left = newNode;
+        }
+        else
+            root = newNode;
+    }
 
-  array_t firstArray = {0};
-  array_t secondArray = {0};
-  array_t resultArray = {0};
+    void preOrder()
+    {
+        std::stack<bstNode *> first;
+        std::stack<bstNode *> second;
+        bstNode *current = nullptr;
+        if (root != nullptr)
+        {
+            first.push(root);
+            while(!first.empty())
+            {
+                current = first.top();
+                first.pop();
+                second.push(current);
+                if (current->left != nullptr)
+                    first.push(current->left);
+                if (current->right != nullptr)
+                    first.push(current->right);
+            }
+            while (!second.empty())
+            {
+                current = second.top();
+                second.pop();
+                std::cout << current->key << " ";
+            }
+            std::cout << std::endl;
+        }
+    }
 
-  firstArray.length = n;
-  secondArray.length = m;
-  resultArray.array = new int[m];
-  resultArray.length = 0;
 
-  scanArray(&firstArray);
-  scanArray(&secondArray);
+private:
+    bstNode *root;
+    Comparator comp;
+    std::queue<bstNode *> queue;
+};
 
-  findIntersection(&firstArray, &secondArray, &resultArray);
-
-  printArray(&resultArray);
-
-  freeArray(&firstArray);
-  freeArray(&secondArray);
-  freeArray(&resultArray);
-
-  return OK;
+int main()
+{
+    BST<int> bst;
+    int numbersAmount = 0;
+    int value = 0;
+    std::cin >> numbersAmount;
+    for (int i = 0; i < numbersAmount; i++)
+    {
+        std::cin >> value;
+        bst.insert(value);
+    }
+    bst.preOrder();
+    return 0;
 }
