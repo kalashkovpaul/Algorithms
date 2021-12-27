@@ -11,39 +11,34 @@ ArcGraph, хранящий граф в виде одного массива па
 */
 
 #include <iostream>
-#include <vector>
 #include <queue>
 #include <stack>
+#include <vector>
 
+#include "ArcGraph.h"
 #include "IGraph.h"
 #include "ListGraph.h"
 #include "MatrixGraph.h"
 #include "SetGraph.h"
-#include "ArcGraph.h"
 
 void dfs(const IGraph& graph, void (*callback)(int v))
 {
     std::vector<bool> visited(graph.VerticesCount(), false);
     std::stack<int> stack;
     stack.push(0);
-    for (int i = 0; i < graph.VerticesCount(); i++)
-    {
+    for (int i = 0; i < graph.VerticesCount(); i++) {
         stack.push(i);
-        while(!stack.empty())
-        {
+        while (!stack.empty()) {
             int curVex = stack.top();
             stack.pop();
-            if (!visited[curVex])
-            {
+            if (!visited[curVex]) {
                 callback(curVex);
                 visited[curVex] = true;
             }
             std::vector<int> children = graph.GetNextVertices(curVex);
-            for (int i = children.size() - 1; i >= 0; i--)
-            {
+            for (int i = children.size() - 1; i >= 0; i--) {
                 int child = children[i];
-                if (!visited[child])
-                {
+                if (!visited[child]) {
                     stack.push(child);
                 }
             }
@@ -55,34 +50,29 @@ void bfs(const IGraph& graph, void (*callback)(int v))
 {
     std::vector<bool> visited(graph.VerticesCount(), false);
     std::queue<int> q;
-    for (int vertex = 0; vertex < graph.VerticesCount(); vertex++)
-    {
-        if (!visited[vertex])
-        {
+    for (int vertex = 0; vertex < graph.VerticesCount(); vertex++) {
+        if (!visited[vertex]) {
             visited[vertex] = true;
             q.push(vertex);
-            while(!q.empty())
-            {
+            while (!q.empty()) {
                 int curVex = q.front();
                 q.pop();
                 callback(curVex);
                 std::vector<int> children = graph.GetNextVertices(curVex);
-                for (auto& child : children)
-                {
-                    if (!visited[child])
-                    {
+                for (auto& child : children) {
+                    if (!visited[child]) {
                         visited[child] = true;
                         q.push(child);
                     }
                 }
             }
         }
-    }   
+    }
 }
 
 int main()
 {
-    IGraph *listGraph = new ListGraph(9);
+    IGraph* listGraph = new ListGraph(9);
     listGraph->AddEdge(0, 1);
     listGraph->AddEdge(0, 7);
     listGraph->AddEdge(0, 8);
@@ -103,7 +93,7 @@ int main()
         std::cout << v << std::endl;
     });
 
-    IGraph *matrixGraph = new MatrixGraph(*listGraph);
+    IGraph* matrixGraph = new MatrixGraph(*listGraph);
     std::cout << "This is MatrixGraph" << std::endl;
     std::cout << "----------DFS---------" << std::endl;
     dfs(*matrixGraph, [](int v) {
@@ -114,7 +104,7 @@ int main()
         std::cout << v << std::endl;
     });
 
-    IGraph *setGraph = new SetGraph(*matrixGraph);
+    IGraph* setGraph = new SetGraph(*matrixGraph);
     std::cout << "This is SetGraph" << std::endl;
     std::cout << "----------DFS---------" << std::endl;
     dfs(*setGraph, [](int v) {
@@ -125,7 +115,7 @@ int main()
         std::cout << v << std::endl;
     });
 
-    IGraph *arcGraph = new ArcGraph(*setGraph);
+    IGraph* arcGraph = new ArcGraph(*setGraph);
     std::cout << "This is ArcGraph" << std::endl;
     std::cout << "----------DFS---------" << std::endl;
     dfs(*arcGraph, [](int v) {
@@ -136,7 +126,7 @@ int main()
         std::cout << v << std::endl;
     });
 
-    IGraph *secondListGraph = new ListGraph(*arcGraph);
+    IGraph* secondListGraph = new ListGraph(*arcGraph);
     std::cout << "This is second ListGraph" << std::endl;
     std::cout << "----------DFS---------" << std::endl;
     dfs(*secondListGraph, [](int v) {
