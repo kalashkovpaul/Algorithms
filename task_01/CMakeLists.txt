@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.8)
+project(homework2.1)
+enable_language(C)
+enable_language(CXX)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+set(CXX g++)
+
+set(LIB_SOURCE_FILES ListGraph/ListGraph.cpp MatrixGraph/MatrixGraph.cpp SetGraph/SetGraph.cpp ArcGraph/ArcGraph.cpp)
+set(LIB_HEADERS_FILES include/IGraph.h ListGraph/ListGraph.h MatrixGraph/MatrixGraph.h SetGraph/SetGraph.h ArcGraph/ArcGraph.h)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -pedantic -Wvla -Iinc -Wfloat-equal -pthread -Wpedantic -Wextra")
+
+add_library(graph STATIC ${LIB_SOURCE_FILES} ${LIB_HEADERS_FILES})
+include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/ListGraph ${PROJECT_SOURCE_DIR}/MatrixGraph ${PROJECT_SOURCE_DIR}/SetGraph ${PROJECT_SOURCE_DIR}/ArcGraph)
+add_executable(app src/main.cpp)
+target_link_libraries(app graph)
